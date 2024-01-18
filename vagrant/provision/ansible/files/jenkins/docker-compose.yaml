@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  jenkins:
+    #image: jenkins/jenkins:2.426.2-lts-jdk17
+    build: .
+    container_name: jenkins
+    hostname: jenkins
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2048MiB
+    environment:
+    - JAVA_OPTS=${JAVA_OPTS}
+    - JENKINS_USER=${JENKINS_USER}
+    - JENKINS_PASS=${JENKINS_PASS}
+    volumes:
+    - jenkins_app:/var/jenkins_home
+    - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+    - 8080:8080
+    networks:
+    - jenkins_ntw   
+
+volumes:
+  jenkins_app:    
+    
+networks:
+  jenkins_ntw:

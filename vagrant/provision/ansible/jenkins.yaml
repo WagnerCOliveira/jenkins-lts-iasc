@@ -1,0 +1,86 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: Adicionando entradas /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: '{{ item }}'
+      with_items:
+      - 192.168.56.100 master.millennium.falcon
+      - 192.168.56.101 node1.millennium.falcon
+      - 192.168.56.102 node2.millennium.falcon
+      - 192.168.56.103 registry.millennium.falcon
+      - 192.168.56.104 jenkins.millennium.falcon
+      - 192.168.56.105 gitlab.millennium.falcon        
+
+    - name: Criando os arquivos
+      copy:
+        src: files/jenkins/{{ item }}
+        dest: /opt
+        mode: 0644    
+      loop:
+      - docker-compose.yaml
+      - .env
+      - Dockerfile
+      - jenkins.yaml
+      - plugins.txt
+
+    - name: Removendo pacotes antigos para instalação DOCKER
+      package:
+        name: '{{ item }}'
+        state: absent
+      loop:
+      - docker 
+      - docker-engine 
+      - docker-io 
+      - containerd 
+      - runc 
+      - docker-client 
+      - docker-client-latest 
+      - docker-common 
+      - docker-latest 
+      - docker-latest-logrotate 
+      - docker-logrotate
+    
+    - name: Adicionando Repositório Docker 
+      yum_repository:
+        name: docker-ce
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+        description: Docker CE Stable
+        file: docker-ce
+        gpgcheck: no
+
+    - name: Instalando Docker Ce
+      package:
+        name: docker-ce
+        state: present
+
+    - name: Habilitando Serviço do docker na inicialização
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Instalando pré requisitos pip docker, docker-compose
+      pip:
+        name: [ "docker", "docker-compose" ]
+
+    - name: Subindo Jenkins
+      docker_compose:
+        project_src: /opt/
+
+    - name: Desabilitando SELinux
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=disabled'
+      register: selinuxdisabled
+
+    - name: Wait for 5 Second and Reboot
+      shell: "sleep 5 && reboot"
+      async: 1
+      poll: 0
+      when: selinuxdisabled is changed

@@ -1,0 +1,16 @@
+artifactory:latest
+command-launcher:latest
+copyartifact:latest
+dashboard-view:latest
+docker-workflow:latest
+docker-plugin:latest
+docker-build-step:latest
+email-ext:latest
+gitlab-plugin:latest
+gitlab-oauth:latest
+workflow-aggregator:latest
+shared-workspace:latest
+ssh-agent:latest
+configuration-as-code:1763.vb_fe9c1b_83f7b
+matrix-auth:3.2.1
+authorize-project:latest
