@@ -10,7 +10,7 @@ services:
       resources:
         limits:
           cpus: '2'
-          memory: 2048MiB
+          memory: 2048M
     environment:
     - JAVA_OPTS=${JAVA_OPTS}
     - JENKINS_USER=${JENKINS_USER}

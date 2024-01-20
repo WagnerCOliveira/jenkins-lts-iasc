@@ -1,0 +1,15 @@
+<network>
+  <name>private_network</name>  
+  <bridge name='virbr1'/>
+  <domain name='private_network' localOnly='yes'/>
+  <dns>
+    <host ip='192.168.56.1'>
+      <hostname>gateway</hostname>
+    </host>
+  </dns>
+  <ip address='192.168.56.1' netmask='255.255.255.0' localPtr='yes'>
+    <dhcp>
+      <range start='192.168.56.10' end='192.168.56.50'/>
+    </dhcp>
+  </ip>
+</network>

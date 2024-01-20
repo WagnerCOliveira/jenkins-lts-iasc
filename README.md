@@ -35,7 +35,15 @@ Como base no conceito antes falado, foi utilizado o libvirt.
 
 Para interagir com o libvirt foi utilizado o Vagrant, que é utilizado para fazer todo o trabalho de criação da maquina virtual, instalação e configuração.
 
-Após se certificar de ter instalado o **libvirt e vagrant** é apenas para executar o seguinte comando.
+Após se certificar de ter instalado o **libvirt e vagrant** será necessário criar uma interface privada no libvirt, pré requisito da Virtual Machine, o arquivo para a criação desta interface está em **libvirt/network** e para cria-lo acesso como root e execute o comando.
+
+~~~bash
+
+virsh net-create libvirt/network/private_network.xml
+
+~~~
+
+Para iniciar o processo com **Vagrant** apenas execute o seguinte comando.
 
 ~~~bash
 
