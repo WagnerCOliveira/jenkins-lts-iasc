@@ -63,6 +63,12 @@
         name: docker
         state: started
         enabled: yes
+    
+    - name: Adicionando Usuário vagrant ao Grupo Docker
+      user:
+        name: vagrant
+        shell: /bin/bash
+        groups: docker
 
     - name: Instalando pré requisitos pip docker, docker-compose
       pip:
