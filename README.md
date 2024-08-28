@@ -47,20 +47,24 @@ JENKINS_PASS='password'
 Após se certificar de ter instalado o **libvirt e vagrant** será necessário criar uma interface privada no libvirt, pré requisito da Virtual Machine, o arquivo para a criação desta interface está em **libvirt/network** e para cria-lo acesso como root e execute o comando.
 
 
-
-
-
 ~~~bash
 
-virsh net-create libvirt/network/private_network.xml
+sudo virsh net-create libvirt/network/private_network.xml
 
+~~~
+
+Logo após criar a Network **private_network** será necessário inicia-la e coloca-la na inicialização do libvirt, para quando o for criar a Virtual Machine o Vagrant normalmente inicialize. Execute os comandos.
+
+~~~bash
+sudo virsh net-start private_network
+sudo virsh net-autostart private_network
 ~~~
 
 Para iniciar o processo com **Vagrant** apenas execute o seguinte comando.
 
 ~~~bash
 
-vagrant up jenkins
+sudo vagrant up jenkins
 
 ~~~
 
@@ -69,26 +73,12 @@ Para as configurações de recursos para criação da vm o arquivo **environment
 ~~~yml
 ---
 - name: jenkins # Nome para VM
-  box: centos/8 # A Box(Sistema Operacional) Utilizado
+  box: debian/bookworm64 # A Box(Sistema Operacional) Utilizado
   hostname: jenkins # Hostname do servidor
   ipaddress: 192.168.56.104 # Endereço IP para o servidor
   memory: 3076 # Quantidade de Memoria Ram
   cpus: 2 # Quantidade de Cpus
   provision: provision/ansible/jenkins.yaml  # Plaibook ansible
-~~~
-
-Quando se vai utilizar ansible com a Box do centos/8 apresenta erro na execução do ansible e da instalação de pacotes vis dnf.
-Para correção na Box do centos/8, foi necessário criar o **script.sh** que instala e configura pré requisitos importantes na execução correta do ansible.
-
-~~~sh
-#!/bin/bash
-
-cd /etc/yum.repos.d/
-sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-dnf install -y centos-release-ansible-29.noarch
-dnf update -y
-dnf -y install curl gcc libffi-devel openssl-devel python3 python3-pip ansible
 ~~~
 
 
