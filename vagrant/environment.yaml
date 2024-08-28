@@ -1,6 +1,6 @@
 ---
 - name: jenkins
-  box: centos/8
+  box: debian/bookworm64
   hostname: jenkins
   ipaddress: 192.168.56.104
   memory: 3076

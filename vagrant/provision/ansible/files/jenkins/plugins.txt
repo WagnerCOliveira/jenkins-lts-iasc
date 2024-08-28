@@ -11,6 +11,6 @@ gitlab-oauth:latest
 workflow-aggregator:latest
 shared-workspace:latest
 ssh-agent:latest
-configuration-as-code:1763.vb_fe9c1b_83f7b
+configuration-as-code:latest
 matrix-auth:3.2.1
 authorize-project:latest

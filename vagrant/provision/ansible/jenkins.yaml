@@ -3,18 +3,44 @@
   become: yes
   become_user: root
   become_method: sudo
+  vars:
+    pkg_pre_requisitos:
+      - apt-transport-https 
+      - ca-certificates 
+      - curl 
+      - gpg
+      - gnupg2 
+      - software-properties-common
+      - python3-full
+      - virtualenv
+      - python3-docker
+      - pipx
+
+    pkg_remove_docker:
+      - docker.io 
+      - docker-doc 
+      - docker-compose 
+      - podman-docker 
+      - containerd 
+      - runc
+    
+    pkg_install_docker:
+      - containerd 
+      - docker             
+      - docker-compose
+
   tasks:
-    - name: Adicionando entradas /etc/hosts
-      lineinfile:
+    - name: Adicionar mapeamentos para /etc/hosts
+      blockinfile:
         path: /etc/hosts
-        line: '{{ item }}'
-      with_items:
-      - 192.168.56.100 master.millennium.falcon
-      - 192.168.56.101 node1.millennium.falcon
-      - 192.168.56.102 node2.millennium.falcon
-      - 192.168.56.103 registry.millennium.falcon
-      - 192.168.56.104 jenkins.millennium.falcon
-      - 192.168.56.105 gitlab.millennium.falcon        
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          192.168.56.100  master.millennium.falcon master
+          192.168.56.101  node1.millennium.falcon node1
+          192.168.56.102  node2.millennium.falcon node2
+          192.168.56.103  registry.millennium.falcon registry
+          192.168.56.104  jenkins.millennium.falcon jenkins
+          192.168.56.105  gitlab.millennium.falcon gitlab        
 
     - name: Criando os arquivos
       copy:
@@ -28,41 +54,43 @@
       - jenkins.yaml
       - plugins.txt
 
-    - name: Removendo pacotes antigos para instalação DOCKER
-      package:
-        name: '{{ item }}'
+    - name: Update de todos oa pacotes do Sistema Debian 12
+      apt:
+        name: "*"
+        state: latest
+
+    - name: Removendo pacotes conflitantes
+      apt:
+        name: "{{ pkg_remove_docker }}"
         state: absent
-      loop:
-      - docker 
-      - docker-engine 
-      - docker-io 
-      - containerd 
-      - runc 
-      - docker-client 
-      - docker-client-latest 
-      - docker-common 
-      - docker-latest 
-      - docker-latest-logrotate 
-      - docker-logrotate
+
+    - name: Instalação dos pacotes pré requisitos
+      apt:
+        name: "{{ pkg_pre_requisitos }}"
+        update_cache: yes
     
-    - name: Adicionando Repositório Docker 
-      yum_repository:
-        name: docker-ce
-        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
-        description: Docker CE Stable
-        file: docker-ce
-        gpgcheck: no
+    - name: Instalação Docker
+      block:
+        - name: Instalando key repos Containerd
+          shell: "curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/debian.gpg"
+          args:
+            creates: /etc/apt/trusted.gpg.d/debian.gpg
+        
+        - name: Instalando repos Containerd
+          apt_repository:
+            repo: deb [arch={{ansible_architecture}}] https://download.docker.com/linux/debian {{ansible_distribution_release}} stable            
+            state: present
 
-    - name: Instalando Docker Ce
-      package:
-        name: docker-ce
-        state: present
+        - name: Instalação dos pacotes Docker
+          apt:
+            name: "{{ pkg_install_docker }}"      
+            update_cache: yes
 
-    - name: Habilitando Serviço do docker na inicialização
-      service:
-        name: docker
-        state: started
-        enabled: yes
+        - name: Habilitando Serviço do docker na inicialização
+          service:
+            name: docker
+            state: started
+            enabled: yes
     
     - name: Adicionando Usuário vagrant ao Grupo Docker
       user:
@@ -70,23 +98,6 @@
         shell: /bin/bash
         groups: docker
 
-    - name: Instalando pré requisitos pip docker, docker-compose
-      pip:
-        name: [ "docker", "docker-compose" ]
-
     - name: Subindo Jenkins
       docker_compose:
-        project_src: /opt/
-
-    - name: Desabilitando SELinux
-      lineinfile:
-        path: /etc/selinux/config
-        regexp: '^SELINUX='
-        line: 'SELINUX=disabled'
-      register: selinuxdisabled
-
-    - name: Wait for 5 Second and Reboot
-      shell: "sleep 5 && reboot"
-      async: 1
-      poll: 0
-      when: selinuxdisabled is changed
+        project_src: /opt/    

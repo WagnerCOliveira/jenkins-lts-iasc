@@ -25,16 +25,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           auto_config: false
       end
       srv.vm.provider 'libvirt' do |vb|
-        #vb.name   = env['name']
         vb.memory = env['memory']
         vb.cpus   = env['cpus']
+        vb.cpu_mode = "host-passthrough"
       end
-      srv.vm.provision "shell", path: "script.sh"
+      #srv.vm.provision "shell", path: "script.sh"
       srv.vm.provision 'ansible_local' do |ansible|
         ansible.playbook           = env['provision']
-        ansible.install_mode       = 'pip'
-        ansible.become             = true
-        ansible.become_user        = 'root'
         ansible.compatibility_mode = '2.0'
       end
     end
